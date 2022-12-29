@@ -10,6 +10,7 @@ export default defineConfig({
   },
   plugins: [react()],
   test: {
+    environment: 'jsdom',
     includeSource: ['src/**/*.{ts,tsx}'],
     coverage: {
       reporter: ['text-summary', 'text', 'json-summary', 'html'],
