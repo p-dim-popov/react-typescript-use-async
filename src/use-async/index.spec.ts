@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { useAsync } from './index'
 import { act, renderHook, waitFor } from '@testing-library/react'
 
@@ -71,5 +71,26 @@ describe(useAsync.name, () => {
     result.current.abort()
 
     await waitFor(() => expect(result.current.error).toEqual(abortError))
+  })
+
+  it('should not signal abort after resolve', async function () {
+    const abortSpy = vi.fn()
+    const { result } = renderHook(() =>
+      useAsync(
+        () =>
+          async ({ abortController }) => {
+            abortController.signal.addEventListener('abort', abortSpy)
+            return 1
+          },
+        []
+      )
+    )
+
+    await act(() => result.current.fire())
+
+    await waitFor(() => expect(result.current.isLoading).toEqual(false))
+
+    await act(() => result.current.abort())
+    expect(abortSpy).not.toBeCalled()
   })
 })

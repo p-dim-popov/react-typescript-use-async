@@ -23,7 +23,8 @@ export const useAsync = <T, Fn extends AsyncOpDefinition<T>>(
     value: undefined,
     error: undefined,
   })
-  const [abortController, setAbortController] = useState<AbortController>()
+  const [abortController, setAbortController] =
+    useState<AbortController | null>(null)
   const abort = useCallback(() => abortController?.abort(), [abortController])
 
   const fire = useCallback((...params: Parameters<Fn>) => {
@@ -37,6 +38,7 @@ export const useAsync = <T, Fn extends AsyncOpDefinition<T>>(
       } catch (error) {
         setState((prev) => ({ ...prev, error: error }))
       } finally {
+        setAbortController(null)
         setState((prev) => ({ ...prev, isLoading: false }))
       }
     })()
