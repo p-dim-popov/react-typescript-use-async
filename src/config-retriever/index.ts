@@ -49,27 +49,40 @@ export const createConfigValueRetriever = <
   D extends Definitions<T>
 >(
   definitions: D,
-  environmentOverrides: Record<string, Definitions<Partial<T>>>
+  environmentOverrides?: Partial<Record<string, Definitions<Partial<T>>>>
 ): ConfigValueRetriever<D> => {
-  const _environmentDefinitions: D = (() => {
-    const env = 'development'
-    return Object.fromEntries(
-      Object.entries(definitions).map(([key, value]) => [
-        key,
-        { ...value, ...environmentOverrides[env][key] },
-      ])
-    ) as D
-  })()
+  const _definitions = overrideDefinitionsFromEnvironment(
+    definitions,
+    environmentOverrides
+  )
 
   const _onChangeNotifiers: ChangedValueNotifiers<D> = {}
 
   return {
-    get: getConfigValue(_environmentDefinitions),
-    fetch: fetchConfigValue(_environmentDefinitions, _onChangeNotifiers),
+    get: getConfigValue(_definitions),
+    fetch: fetchConfigValue(_definitions, _onChangeNotifiers),
     subscribe: {
       onChange: subscribeOnValueChange(_onChangeNotifiers),
     },
   }
+}
+
+export const overrideDefinitionsFromEnvironment = <
+  D extends Definitions<T>,
+  T extends Dictionary
+>(
+  definitions: D,
+  environmentOverrides:
+    | Partial<Record<string, Definitions<Partial<T>>>>
+    | undefined
+): D => {
+  const env = process.env.NODE_ENV ?? 'production'
+  return Object.fromEntries(
+    Object.entries(definitions).map(([key, value]) => [
+      key,
+      { ...value, ...environmentOverrides?.[env]?.[key] },
+    ])
+  ) as D
 }
 
 type ChangedValueEventPayload<T> = { oldValue: T | undefined; newValue: T }

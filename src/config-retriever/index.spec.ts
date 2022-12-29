@@ -2,9 +2,10 @@ import {
   createConfigValueRetriever,
   fetchConfigValue,
   getConfigValue,
+  overrideDefinitionsFromEnvironment,
   subscribeOnValueChange,
 } from './index'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import * as NotifierModule from '../notifier'
 
 const fiddle = () => {
@@ -30,6 +31,34 @@ const fiddle = () => {
 
   console.log(xxx)
 }
+
+describe(overrideDefinitionsFromEnvironment.name, function () {
+  describe.each<[string, { value: string }]>([
+    ['development', { value: 'from-dev' }],
+    ['production', { value: 'from-prod' }],
+    ['test', { value: 'static' }],
+  ])('environment: %s, expected: %j', function (env, expectedResult) {
+    eachOverrideProcessEnv({ NODE_ENV: env })
+
+    it('should override definition from correct environment', function () {
+      const result = overrideDefinitionsFromEnvironment(
+        {
+          key1: { value: 'static' },
+        },
+        {
+          development: {
+            key1: { value: 'from-dev' },
+          },
+          production: {
+            key1: { value: 'from-prod' },
+          },
+        }
+      )
+
+      expect(result.key1).toEqual(expectedResult)
+    })
+  })
+})
 
 describe(getConfigValue.name, () => {
   it('should return static config value', function () {
@@ -150,4 +179,17 @@ const notifierMock = {
   notify: vi.fn(),
   subscribe: vi.fn(),
   unsubscribe: vi.fn(),
+}
+
+const eachOverrideProcessEnv = (overrides: Partial<typeof process.env>) => {
+  const processEnv = process.env
+
+  beforeEach(() => {
+    vi.resetModules()
+    process.env = { ...processEnv, ...overrides }
+  })
+
+  afterEach(() => {
+    process.env = { ...processEnv }
+  })
 }
