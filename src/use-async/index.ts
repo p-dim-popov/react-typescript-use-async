@@ -1,24 +1,52 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-type UseAsyncResult<T, Fn extends AsyncOpDefinition<T>> = AsyncState<T> & {
+type UseAsyncResult<Fn extends AsyncOpDefinition> = AsyncState<
+  UnwrapValue<Fn>
+> & {
   fire: (...params: Parameters<Fn>) => void
   abort: () => void
 }
 
-type AsyncState<T> =
-  | { isLoading: false; value: T; error: undefined }
-  | { isLoading: true; value: T | undefined; error: unknown | undefined }
-  | { isLoading: false; value: T | undefined; error: unknown }
+type AsyncState<T> = LoadingState<T> | SuccessState<T> | ErrorState
 
-type AsyncOpDefinition<T> = (
-  ...params: any[]
-) => (opts: Options) => PromiseOrImmediate<T>
+type SuccessState<T> = {
+  isLoading: false
+  value: T
+  error: undefined
+}
 
-export const useParameterizedAsync = <T, Fn extends AsyncOpDefinition<T>>(
+type ErrorState = {
+  isLoading: false
+  value: undefined
+  error: UseAsyncError
+}
+
+type LoadingState<T> = {
+  isLoading: true
+  value: T | undefined
+  error: undefined
+}
+
+export class UseAsyncError extends Error {
+  constructor(public inner: unknown) {
+    super(
+      typeof inner === 'object' &&
+        inner !== null &&
+        'message' in inner &&
+        typeof inner.message === 'string'
+        ? inner.message
+        : undefined
+    )
+  }
+}
+
+type AsyncOpDefinition = (...params: any[]) => (opts: Options) => any
+
+export const useParameterizedAsync = <Fn extends AsyncOpDefinition>(
   fetch: Fn,
   deps: unknown[]
-): UseAsyncResult<T, Fn> => {
-  const [state, setState] = useState<AsyncState<T>>({
+): UseAsyncResult<Fn> => {
+  const [state, setState] = useState<AsyncState<UnwrapValue<Fn>>>({
     isLoading: true,
     value: undefined,
     error: undefined,
@@ -27,22 +55,30 @@ export const useParameterizedAsync = <T, Fn extends AsyncOpDefinition<T>>(
   const abort = useCallback(() => abortController.current?.abort(), [])
 
   const fire = useCallback((...params: Parameters<Fn>) => {
-    setState((prev) => ({ ...prev, isLoading: true }))
+    setState((prev) => ({
+      ...prev,
+      isLoading: true,
+      error: undefined,
+    }))
     const _abortController = new AbortController()
     abortController.current = _abortController
-    ;(async () => {
+    const execute = async () => {
       try {
         const result = await fetch(...params)({
           signal: _abortController.signal,
         })
-        setState((prev) => ({ ...prev, value: result }))
+        setState({ isLoading: false, value: result, error: undefined })
       } catch (error) {
-        setState((prev) => ({ ...prev, error: error }))
+        setState({
+          isLoading: false,
+          value: undefined,
+          error: new UseAsyncError(error),
+        })
       } finally {
         abortController.current = null
-        setState((prev) => ({ ...prev, isLoading: false }))
       }
-    })()
+    }
+    execute()
   }, deps)
 
   return {
@@ -71,3 +107,6 @@ export const useImmediateAsync = <T>(
 type PromiseOrImmediate<T> = Promise<T> | T
 
 type Options = { signal: AbortSignal }
+
+type UnwrapValue<Fn extends (...args: any[]) => (...args: any[]) => any> =
+  Awaited<ReturnType<ReturnType<Fn>>>

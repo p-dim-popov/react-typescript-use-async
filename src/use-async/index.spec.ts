@@ -1,5 +1,9 @@
 import { describe, expect, it, vi } from 'vitest'
-import { useParameterizedAsync, useImmediateAsync } from './index'
+import {
+  useParameterizedAsync,
+  useImmediateAsync,
+  UseAsyncError,
+} from './index'
 import { act, renderHook, waitFor } from '@testing-library/react'
 
 describe(useParameterizedAsync.name, () => {
@@ -39,7 +43,8 @@ describe(useParameterizedAsync.name, () => {
     result.current.fire()
 
     await waitFor(() => expect(result.current.isLoading).toEqual(false))
-    expect(result.current.error).toEqual(errorMock)
+    expect(result.current.error).toBeInstanceOf(UseAsyncError)
+    expect(result.current.error).toHaveProperty('inner', errorMock)
     expect(result.current.value).toEqual(undefined)
   })
 
