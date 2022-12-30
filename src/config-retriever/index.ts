@@ -20,7 +20,7 @@ type DynamicConfigValueDefinition<T> = {
 type HybridConfigValueDefinition<T> = StaticConfigValueDefinition<T> &
   DynamicConfigValueDefinition<T>
 
-type ConfigValueRetriever<D extends Definitions<Dictionary>> = {
+export type ConfigValueRetriever<D extends Definitions<Dictionary>> = {
   get: <K extends keyof D>(key: K) => ConfigGetValue<D, K>
   fetch: <K extends keyof D>(
     key: K,
@@ -33,14 +33,14 @@ type Subscribe<D extends Definitions<Dictionary>> = {
   onChange: <K extends keyof D>(
     key: K,
     handler: (
-      payload: ChangedValueEventPayload<ConfigDefinitionValue<D[K]>>
+      payload: ChangedValueEventPayload<UnwrapDefinitionValue<D[K]>>
     ) => void
   ) => () => void
 }
 
 type Dictionary = Record<string, unknown>
 
-type Definitions<T extends Dictionary> = {
+export type Definitions<T extends Dictionary> = {
   [K in keyof T]: ConfigValueDefinition<T[K]>
 }
 
@@ -89,7 +89,7 @@ type ChangedValueEventPayload<T> = { oldValue: T | undefined; newValue: T }
 
 type ChangedValueNotifiers<D extends Definitions<Dictionary>> = {
   [K in keyof D]?: Notifier<
-    ChangedValueEventPayload<ConfigDefinitionValue<D[K]>>
+    ChangedValueEventPayload<UnwrapDefinitionValue<D[K]>>
   >
 }
 
@@ -150,22 +150,22 @@ export const fetchConfigValue =
 type AwaitedConfigFetchValue<
   D extends Definitions<Dictionary>,
   K extends keyof D
-> = ConfigDefinitionValue<D[K]>
+> = UnwrapDefinitionValue<D[K]>
 
 export const subscribeOnValueChange =
   <D extends Definitions<Dictionary>>(notifiers: ChangedValueNotifiers<D>) =>
   <K extends keyof D>(
     key: K,
     handler: (
-      payload: ChangedValueEventPayload<ConfigDefinitionValue<D[K]>>
+      payload: ChangedValueEventPayload<UnwrapDefinitionValue<D[K]>>
     ) => void
   ) => {
     const notifier =
       notifiers[key] ??
       (notifiers[key] =
-        createNotifier<ChangedValueEventPayload<ConfigDefinitionValue<D[K]>>>())
+        createNotifier<ChangedValueEventPayload<UnwrapDefinitionValue<D[K]>>>())
     return notifier?.subscribe(handler)
   }
 
-type ConfigDefinitionValue<D extends ConfigValueDefinition<any>> =
+export type UnwrapDefinitionValue<D extends ConfigValueDefinition<any>> =
   D extends ConfigValueDefinition<infer O> ? O : never

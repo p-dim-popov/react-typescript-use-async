@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import reactLogo from './assets/react.svg'
 import './App.css'
+import { createConfigValueRetriever } from './config-retriever'
+import { useConfigValue } from './use-config-value'
 
 function App() {
   const [count, setCount] = useState(0)
@@ -32,3 +34,33 @@ function App() {
 }
 
 export default App
+
+const fiddle = () => {
+  const Config = createConfigValueRetriever(
+    {
+      KEY_1: {
+        value: [''],
+      },
+      KEY_2: {
+        retrieve: async () => 'asdfd',
+        value: 123,
+      },
+      KEY_3: {
+        retrieve: async () => 'asdfd',
+      },
+    },
+    {
+      dev: {},
+    }
+  )
+
+  const xxx = Config.get('KEY_2')
+
+  const Component = () => {
+    const config = useConfigValue(Config, 'KEY_2')
+
+    return <>{config.value}</>
+  }
+
+  console.log(xxx)
+}

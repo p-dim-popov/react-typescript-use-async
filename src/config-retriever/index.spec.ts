@@ -1,5 +1,4 @@
 import {
-  createConfigValueRetriever,
   fetchConfigValue,
   getConfigValue,
   overrideDefinitionsFromEnvironment,
@@ -7,30 +6,6 @@ import {
 } from './index'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import * as NotifierModule from '../notifier'
-
-const fiddle = () => {
-  const Config = createConfigValueRetriever(
-    {
-      KEY_1: {
-        value: [''],
-      },
-      KEY_2: {
-        retrieve: async () => 'asdfd',
-        value: 123,
-      },
-      KEY_3: {
-        retrieve: async () => 'asdfd',
-      },
-    },
-    {
-      dev: {},
-    }
-  )
-
-  const xxx = Config.get('KEY_2')
-
-  console.log(xxx)
-}
 
 describe(overrideDefinitionsFromEnvironment.name, function () {
   describe.each<[string, { value: string }]>([

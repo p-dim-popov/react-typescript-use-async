@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
-type UseAsyncResult<Fn extends AsyncOpDefinition> = AsyncState<
+export type UseAsyncResult<Fn extends AsyncOpDefinition> = AsyncState<
   UnwrapValue<Fn>
 > & {
   fire: (...params: Parameters<Fn>) => void
   abort: () => void
 }
 
-type AsyncState<T> = LoadingState<T> | SuccessState<T> | ErrorState
+export type AsyncState<T> = LoadingState<T> | SuccessState<T> | ErrorState
 
 type SuccessState<T> = {
   isLoading: false
