@@ -13,11 +13,6 @@ export const useConfigValue = <
   useImmediateAsync(
     () =>
       ({ signal }) =>
-        config.fetch(key, {
-          signal,
-          abort: () => {
-            /** TODO: expect only signal */
-          },
-        }),
+        config.fetch(key, { signal }),
     [config, key]
   )

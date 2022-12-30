@@ -11,10 +11,7 @@ type StaticConfigValueDefinition<T> = {
 }
 
 type DynamicConfigValueDefinition<T> = {
-  retrieve: (
-    key: string | number | symbol,
-    abortController: AbortController
-  ) => Promise<T>
+  retrieve: (key: string | number | symbol, opts: RetrieveOptions) => Promise<T>
 }
 
 type HybridConfigValueDefinition<T> = StaticConfigValueDefinition<T> &
@@ -24,7 +21,7 @@ export type ConfigValueRetriever<D extends Definitions<Dictionary>> = {
   get: <K extends keyof D>(key: K) => ConfigGetValue<D, K>
   fetch: <K extends keyof D>(
     key: K,
-    controller?: AbortController
+    opts?: Partial<RetrieveOptions>
   ) => Promise<AwaitedConfigFetchValue<D, K>>
   subscribe: Subscribe<D>
 }
@@ -121,14 +118,17 @@ export const fetchConfigValue =
   ) =>
   async <K extends keyof D>(
     key: K,
-    abortController = new AbortController()
+    opts?: Partial<RetrieveOptions>
   ): Promise<AwaitedConfigFetchValue<D, K>> => {
     const definition = definitions[key]
 
     if ('retrieve' in definition) {
+      const abortController = new AbortController()
+      const signal = opts?.signal ?? abortController.signal
+      const retrieveOptions: RetrieveOptions = { signal }
       const value = (await definition.retrieve(
         key,
-        abortController
+        retrieveOptions
       )) as AwaitedConfigFetchValue<D, K>
 
       const oldValue = (
@@ -169,3 +169,7 @@ export const subscribeOnValueChange =
 
 export type UnwrapDefinitionValue<D extends ConfigValueDefinition<any>> =
   D extends ConfigValueDefinition<infer O> ? O : never
+
+type RetrieveOptions = {
+  signal: AbortSignal
+}
