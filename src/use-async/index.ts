@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 type UseAsyncResult<T, Fn extends AsyncOpDefinition<T>> = AsyncState<T> & {
   fire: (...params: Parameters<Fn>) => void
@@ -12,9 +12,9 @@ type AsyncState<T> =
 
 type AsyncOpDefinition<T> = (
   ...params: any[]
-) => (opts: { abortController: AbortController }) => Promise<T>
+) => (opts: Options) => PromiseOrImmediate<T>
 
-export const useAsync = <T, Fn extends AsyncOpDefinition<T>>(
+export const useParameterizedAsync = <T, Fn extends AsyncOpDefinition<T>>(
   fetch: Fn,
   deps: unknown[]
 ): UseAsyncResult<T, Fn> => {
@@ -23,22 +23,23 @@ export const useAsync = <T, Fn extends AsyncOpDefinition<T>>(
     value: undefined,
     error: undefined,
   })
-  const [abortController, setAbortController] =
-    useState<AbortController | null>(null)
-  const abort = useCallback(() => abortController?.abort(), [abortController])
+  const abortController = useRef<AbortController | null>(null)
+  const abort = useCallback(() => abortController.current?.abort(), [])
 
   const fire = useCallback((...params: Parameters<Fn>) => {
     setState((prev) => ({ ...prev, isLoading: true }))
-    const abortController = new AbortController()
-    setAbortController(abortController)
+    const _abortController = new AbortController()
+    abortController.current = _abortController
     ;(async () => {
       try {
-        const result = await fetch(...params)({ abortController })
+        const result = await fetch(...params)({
+          abortController: _abortController,
+        })
         setState((prev) => ({ ...prev, value: result }))
       } catch (error) {
         setState((prev) => ({ ...prev, error: error }))
       } finally {
-        setAbortController(null)
+        abortController.current = null
         setState((prev) => ({ ...prev, isLoading: false }))
       }
     })()
@@ -50,3 +51,23 @@ export const useAsync = <T, Fn extends AsyncOpDefinition<T>>(
     abort,
   }
 }
+
+export const useImmediateAsync = <T>(
+  fn: () => (opts: Options) => PromiseOrImmediate<T>,
+  deps: unknown[]
+) => {
+  const result = useParameterizedAsync(fn, deps)
+
+  const { fire, abort } = result
+  useEffect(() => {
+    fire()
+
+    return abort
+  }, [abort, fire])
+
+  return result
+}
+
+type PromiseOrImmediate<T> = Promise<T> | T
+
+type Options = { abortController: AbortController }

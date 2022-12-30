@@ -1,10 +1,12 @@
 import { describe, expect, it, vi } from 'vitest'
-import { useAsync } from './index'
+import { useParameterizedAsync, useImmediateAsync } from './index'
 import { act, renderHook, waitFor } from '@testing-library/react'
 
-describe(useAsync.name, () => {
+describe(useParameterizedAsync.name, () => {
   it('should render in a loading state { isLoading: true, value: undefined, error: undefined }', () => {
-    const { result } = renderHook(() => useAsync(() => async () => {}, []))
+    const { result } = renderHook(() =>
+      useParameterizedAsync(() => async () => {}, [])
+    )
 
     expect(result.current.isLoading).toEqual(true)
     expect(result.current.value).toBeUndefined()
@@ -13,7 +15,7 @@ describe(useAsync.name, () => {
 
   it('should transition to a settled state after promise resolve', async () => {
     const { result } = renderHook(() =>
-      useAsync(() => async () => 'got-me', [])
+      useParameterizedAsync(() => async () => 'got-me', [])
     )
 
     result.current.fire()
@@ -26,7 +28,7 @@ describe(useAsync.name, () => {
   it('should transition to a error state after promise rejection', async () => {
     const errorMock = new Error('got-me')
     const { result } = renderHook(() =>
-      useAsync(
+      useParameterizedAsync(
         () => async () => {
           throw errorMock
         },
@@ -43,7 +45,7 @@ describe(useAsync.name, () => {
 
   it('should pass parameters from fire', async () => {
     const { result } = renderHook(() =>
-      useAsync((param: number) => async () => param + 1, [])
+      useParameterizedAsync((param: number) => async () => param + 1, [])
     )
 
     result.current.fire(2)
@@ -54,7 +56,7 @@ describe(useAsync.name, () => {
   it('should signal on abort', async function () {
     const abortError = new Error('aborted')
     const { result } = renderHook(() =>
-      useAsync(
+      useParameterizedAsync(
         () =>
           ({ abortController }) =>
             new Promise((resolve, reject) => {
@@ -76,7 +78,7 @@ describe(useAsync.name, () => {
   it('should not signal abort after resolve', async function () {
     const abortSpy = vi.fn()
     const { result } = renderHook(() =>
-      useAsync(
+      useParameterizedAsync(
         () =>
           async ({ abortController }) => {
             abortController.signal.addEventListener('abort', abortSpy)
@@ -93,4 +95,72 @@ describe(useAsync.name, () => {
     await act(() => result.current.abort())
     expect(abortSpy).not.toBeCalled()
   })
+})
+
+describe(useImmediateAsync.name, function () {
+  it('should call fire upon mount', async function () {
+    const asyncOperationMock = vi.fn()
+    renderHook(() => useImmediateAsync(() => asyncOperationMock, []))
+
+    expect(asyncOperationMock).toBeCalled()
+  })
+
+  it('should abort and fire again on dependencies change', async function () {
+    vi.useFakeTimers()
+    const { earlyCallMock, lateCallMock, operationMock, rejectSpy } =
+      getAbortableSpy()
+
+    const { rerender } = renderHook((deps: unknown[] = [1]) =>
+      useImmediateAsync(() => operationMock, deps)
+    )
+
+    await act(() => vi.advanceTimersByTime(5))
+    rerender([2])
+
+    expect(operationMock).toBeCalledTimes(2)
+    expect(earlyCallMock).toBeCalledTimes(2)
+    expect(rejectSpy).toBeCalled()
+    expect(lateCallMock).not.toBeCalled()
+  })
+
+  it('should not abort on function change (re-render)', async function () {
+    vi.useFakeTimers()
+    const { earlyCallMock, lateCallMock, operationMock, rejectSpy } =
+      getAbortableSpy()
+
+    const { rerender } = renderHook(
+      (func: Parameters<typeof useImmediateAsync>[0] = () => operationMock) =>
+        useImmediateAsync(func, [])
+    )
+
+    await act(() => vi.advanceTimersByTime(5))
+    rerender(() => operationMock)
+    await act(() => vi.advanceTimersByTime(5))
+
+    expect(operationMock).toBeCalledTimes(1)
+    expect(earlyCallMock).toBeCalledTimes(1)
+    expect(lateCallMock).toBeCalledTimes(1)
+    expect(rejectSpy).not.toBeCalled()
+  })
+
+  const getAbortableSpy = () => {
+    const earlyCallMock = vi.fn()
+    const lateCallMock = vi.fn()
+    const rejectSpy = vi.fn()
+    const operationMock = vi.fn(
+      async (opts: { abortController: AbortController }) => {
+        earlyCallMock()
+        await new Promise((resolve, reject) => {
+          opts.abortController.signal.addEventListener('abort', (evt) => {
+            rejectSpy(evt)
+            reject(evt)
+          })
+          setTimeout(resolve, 10)
+        })
+        lateCallMock()
+      }
+    )
+
+    return { earlyCallMock, lateCallMock, operationMock, rejectSpy }
+  }
 })
