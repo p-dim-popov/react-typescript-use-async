@@ -33,7 +33,7 @@ export const useParameterizedAsync = <T, Fn extends AsyncOpDefinition<T>>(
     ;(async () => {
       try {
         const result = await fetch(...params)({
-          abortController: _abortController,
+          signal: _abortController.signal,
         })
         setState((prev) => ({ ...prev, value: result }))
       } catch (error) {
@@ -70,4 +70,4 @@ export const useImmediateAsync = <T>(
 
 type PromiseOrImmediate<T> = Promise<T> | T
 
-type Options = { abortController: AbortController }
+type Options = { signal: AbortSignal }

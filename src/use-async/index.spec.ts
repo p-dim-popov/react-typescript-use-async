@@ -58,9 +58,9 @@ describe(useParameterizedAsync.name, () => {
     const { result } = renderHook(() =>
       useParameterizedAsync(
         () =>
-          ({ abortController }) =>
+          ({ signal }) =>
             new Promise((resolve, reject) => {
-              abortController.signal.addEventListener('abort', () => {
+              signal.addEventListener('abort', () => {
                 reject(abortError)
               })
             }),
@@ -80,8 +80,8 @@ describe(useParameterizedAsync.name, () => {
     const { result } = renderHook(() =>
       useParameterizedAsync(
         () =>
-          async ({ abortController }) => {
-            abortController.signal.addEventListener('abort', abortSpy)
+          async ({ signal }) => {
+            signal.addEventListener('abort', abortSpy)
             return 1
           },
         []
@@ -147,19 +147,17 @@ describe(useImmediateAsync.name, function () {
     const earlyCallMock = vi.fn()
     const lateCallMock = vi.fn()
     const rejectSpy = vi.fn()
-    const operationMock = vi.fn(
-      async (opts: { abortController: AbortController }) => {
-        earlyCallMock()
-        await new Promise((resolve, reject) => {
-          opts.abortController.signal.addEventListener('abort', (evt) => {
-            rejectSpy(evt)
-            reject(evt)
-          })
-          setTimeout(resolve, 10)
+    const operationMock = vi.fn(async (opts: { signal: AbortSignal }) => {
+      earlyCallMock()
+      await new Promise((resolve, reject) => {
+        opts.signal.addEventListener('abort', (evt) => {
+          rejectSpy(evt)
+          reject(evt)
         })
-        lateCallMock()
-      }
-    )
+        setTimeout(resolve, 10)
+      })
+      lateCallMock()
+    })
 
     return { earlyCallMock, lateCallMock, operationMock, rejectSpy }
   }
