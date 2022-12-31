@@ -1,4 +1,5 @@
 import { createConfigValueRetriever } from './utils/config-retriever'
+import { useConfigValue } from './utils/use-config-value'
 
 export const Config = createConfigValueRetriever({
   API: { value: 'https://httpbin.org' },
@@ -6,6 +7,12 @@ export const Config = createConfigValueRetriever({
     retrieve: async (key, opts) => fetchTheme(opts.signal),
   },
 })
+
+export const useAppConfigValue = <
+  K extends Parameters<typeof Config['fetch']>[0]
+>(
+  key: K
+) => useConfigValue(Config, key)
 
 const fetchTheme = async (signal: AbortSignal): Promise<string> => {
   try {

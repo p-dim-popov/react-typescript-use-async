@@ -1,6 +1,5 @@
 import { createConfigValueRetriever } from './utils/config-retriever'
-import { useConfigValue } from './utils/use-config-value'
-import { Config } from './config'
+import { useAppConfigValue } from './config'
 import { Box, Button, CircularProgress, Grid } from '@mui/material'
 import { Link, Route, Routes } from 'react-router-dom'
 import React, { useMemo } from 'react'
@@ -42,7 +41,7 @@ const Links = () => {
 }
 
 const CurrentTheme = () => {
-  const themeConfig = useConfigValue(Config, 'APP_THEME')
+  const themeConfig = useAppConfigValue('APP_THEME')
 
   return (
     <div>
@@ -60,7 +59,7 @@ const CurrentTheme = () => {
 
 const createPage = (number: number) => {
   const Component: React.FC = () => {
-    const themeConfig = useConfigValue(Config, 'APP_THEME')
+    const themeConfig = useAppConfigValue('APP_THEME')
     return (
       <>
         <h2>Page {number}</h2>
@@ -86,7 +85,7 @@ const Page3 = createPage(3)
 
 export default App
 
-const fiddle = () => {
+const fiddle = async () => {
   const Config = createConfigValueRetriever(
     {
       KEY_1: {
@@ -106,6 +105,7 @@ const fiddle = () => {
   )
 
   const xxx = Config.get('KEY_2')
+  const { useConfigValue } = await import('./utils/use-config-value')
 
   const Component = () => {
     const config = useConfigValue(Config, 'KEY_1')
