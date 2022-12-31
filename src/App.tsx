@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import reactLogo from './assets/react.svg'
 import './App.css'
-import { createConfigValueRetriever } from './config-retriever'
-import { useConfigValue } from './use-config-value'
+import { createConfigValueRetriever } from './utils/config-retriever'
+import { useConfigValue } from './utils/use-config-value'
 
 function App() {
   const [count, setCount] = useState(0)
