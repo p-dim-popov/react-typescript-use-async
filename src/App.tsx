@@ -57,9 +57,9 @@ const fiddle = () => {
   const xxx = Config.get('KEY_2')
 
   const Component = () => {
-    const config = useConfigValue(Config, 'KEY_2')
+    const config = useConfigValue(Config, 'KEY_1')
 
-    return <>{config.value}</>
+    return <>{config.value?.map((x) => x.big())}</>
   }
 
   console.log(xxx)

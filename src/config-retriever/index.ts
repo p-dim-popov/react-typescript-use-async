@@ -11,7 +11,10 @@ type StaticConfigValueDefinition<T> = {
 }
 
 type DynamicConfigValueDefinition<T> = {
-  retrieve: (key: string | number | symbol, opts: RetrieveOptions) => Promise<T>
+  retrieve: (
+    key: string | number | symbol,
+    opts: RetrieveOptions
+  ) => Promise<T> | T
 }
 
 type HybridConfigValueDefinition<T> = StaticConfigValueDefinition<T> &
@@ -167,8 +170,8 @@ export const subscribeOnValueChange =
     return notifier?.subscribe(handler)
   }
 
-export type UnwrapDefinitionValue<D extends ConfigValueDefinition<any>> =
-  D extends ConfigValueDefinition<infer O> ? O : never
+export type UnwrapDefinitionValue<VD extends ConfigValueDefinition<any>> =
+  VD extends ConfigValueDefinition<infer O> ? O : never
 
 type RetrieveOptions = {
   signal: AbortSignal
