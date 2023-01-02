@@ -1,7 +1,7 @@
 import type { UseAsyncError } from './use-async'
 
-export type UseAsyncResult<Fn extends AsyncOpDefinition> = AsyncState<
-  UnwrapValue<Fn>
+export type UseAsyncResult<Fn extends AsyncOperation> = AsyncState<
+  UnwrapAsyncResult<Fn>
 > & {
   run: (...params: Parameters<Fn>) => void
   abort: () => void
@@ -27,12 +27,12 @@ type LoadingState<T> = {
   error: UseAsyncError | undefined
 }
 
-export type AsyncOpDefinition = (...params: any[]) => (opts: Options) => any
+export type AsyncOperation = (...params: any[]) => (opts: AsyncOptions) => any
 
 export type PromiseOrImmediate<T> = Promise<T> | T
 
-export type Options = { signal: AbortSignal }
+export type AsyncOptions = { signal: AbortSignal }
 
-export type UnwrapValue<
+export type UnwrapAsyncResult<
   Fn extends (...args: any[]) => (...args: any[]) => any
 > = Awaited<ReturnType<ReturnType<Fn>>>

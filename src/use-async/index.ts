@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type {
-  AsyncOpDefinition,
+  AsyncOperation,
   AsyncState,
-  Options,
+  AsyncOptions,
   PromiseOrImmediate,
-  UnwrapValue,
+  UnwrapAsyncResult,
   UseAsyncResult,
 } from '../types'
 
@@ -21,11 +21,11 @@ export class UseAsyncError extends Error {
   }
 }
 
-export const useAsync = <Fn extends AsyncOpDefinition>(
+export const useAsync = <Fn extends AsyncOperation>(
   fetch: Fn,
   deps: unknown[]
 ): UseAsyncResult<Fn> => {
-  const [state, setState] = useState<AsyncState<UnwrapValue<Fn>>>({
+  const [state, setState] = useState<AsyncState<UnwrapAsyncResult<Fn>>>({
     isLoading: true,
     value: undefined,
     error: undefined,
@@ -64,7 +64,7 @@ export const useAsync = <Fn extends AsyncOpDefinition>(
 }
 
 export const useImmediateAsync = <T>(
-  fn: () => (opts: Options) => PromiseOrImmediate<T>,
+  fn: () => (opts: AsyncOptions) => PromiseOrImmediate<T>,
   deps: unknown[]
 ) => {
   const result = useAsync(fn, deps)
