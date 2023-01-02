@@ -1,2 +1,2 @@
-export * from './use-async'
+export * from './useAsync'
 export { AsyncError } from './AsyncError'
