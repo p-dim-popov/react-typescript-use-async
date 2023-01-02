@@ -1,25 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type {
   AsyncOperation,
-  AsyncState,
   AsyncOptions,
+  AsyncState,
   PromiseOrImmediate,
   UnwrapAsyncResult,
   UseAsyncResult,
 } from '../types'
-
-export class UseAsyncError extends Error {
-  constructor(public inner: unknown) {
-    super(
-      typeof inner === 'object' &&
-        inner !== null &&
-        'message' in inner &&
-        typeof inner.message === 'string'
-        ? (inner as Error).message
-        : undefined
-    )
-  }
-}
+import { AsyncError } from '../AsyncError'
 
 export const useAsync = <Fn extends AsyncOperation>(
   fetch: Fn,
@@ -47,7 +35,7 @@ export const useAsync = <Fn extends AsyncOperation>(
         setState({
           isLoading: false,
           value: undefined,
-          error: new UseAsyncError(error),
+          error: new AsyncError(error),
         })
       } finally {
         abortController.current = null

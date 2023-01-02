@@ -1,4 +1,4 @@
-import type { UseAsyncError } from './use-async'
+import type { AsyncError } from './AsyncError'
 
 export type UseAsyncResult<Fn extends AsyncOperation> = AsyncState<
   UnwrapAsyncResult<Fn>
@@ -18,13 +18,13 @@ type SuccessState<T> = {
 type ErrorState = {
   isLoading: false
   value: undefined
-  error: UseAsyncError
+  error: AsyncError
 }
 
 type LoadingState<T> = {
   isLoading: true
   value: T | undefined
-  error: UseAsyncError | undefined
+  error: AsyncError | undefined
 }
 
 export type AsyncOperation = (...params: any[]) => (opts: AsyncOptions) => any

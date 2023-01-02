@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
-import { useAsync, useImmediateAsync, UseAsyncError } from './index'
+import { useAsync, useImmediateAsync } from './index'
 import { act, renderHook, waitFor } from '@testing-library/react'
+import { AsyncError } from '../AsyncError'
 
 describe(useAsync.name, () => {
   it('should render in a loading state { isLoading: true, value: undefined, error: undefined }', () => {
@@ -37,7 +38,7 @@ describe(useAsync.name, () => {
     result.current.run()
 
     await waitFor(() => expect(result.current.isLoading).toEqual(false))
-    expect(result.current.error).toBeInstanceOf(UseAsyncError)
+    expect(result.current.error).toBeInstanceOf(AsyncError)
     expect(result.current.error).toHaveProperty('inner', errorMock)
     expect(result.current.value).toEqual(undefined)
   })
