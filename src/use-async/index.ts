@@ -3,7 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 export type UseAsyncResult<Fn extends AsyncOpDefinition> = AsyncState<
   UnwrapValue<Fn>
 > & {
-  fire: (...params: Parameters<Fn>) => void
+  run: (...params: Parameters<Fn>) => void
   abort: () => void
 }
 
@@ -24,7 +24,7 @@ type ErrorState = {
 type LoadingState<T> = {
   isLoading: true
   value: T | undefined
-  error: undefined
+  error: UseAsyncError | undefined
 }
 
 export class UseAsyncError extends Error {
@@ -33,7 +33,7 @@ export class UseAsyncError extends Error {
       typeof inner === 'object' &&
         inner !== null &&
         'message' in inner &&
-        typeof (inner as Error).message === 'string'
+        typeof inner.message === 'string'
         ? (inner as Error).message
         : undefined
     )
@@ -54,12 +54,8 @@ export const useParameterizedAsync = <Fn extends AsyncOpDefinition>(
   const abortController = useRef<AbortController | null>(null)
   const abort = useCallback(() => abortController.current?.abort(), [])
 
-  const fire = useCallback((...params: Parameters<Fn>) => {
-    setState((prev) => ({
-      ...prev,
-      isLoading: true,
-      error: undefined,
-    }))
+  const run = useCallback((...params: Parameters<Fn>) => {
+    setState((prev) => ({ ...prev, isLoading: true }))
     const _abortController = new AbortController()
     abortController.current = _abortController
     const execute = async () => {
@@ -83,7 +79,7 @@ export const useParameterizedAsync = <Fn extends AsyncOpDefinition>(
 
   return {
     ...state,
-    fire,
+    run,
     abort,
   }
 }
@@ -94,12 +90,12 @@ export const useImmediateAsync = <T>(
 ) => {
   const result = useParameterizedAsync(fn, deps)
 
-  const { fire, abort } = result
+  const { run, abort } = result
   useEffect(() => {
-    fire()
+    run()
 
     return abort
-  }, [abort, fire])
+  }, [abort, run])
 
   return result
 }

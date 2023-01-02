@@ -22,7 +22,7 @@ describe(useParameterizedAsync.name, () => {
       useParameterizedAsync(() => async () => 'got-me', [])
     )
 
-    result.current.fire()
+    result.current.run()
 
     await waitFor(() => expect(result.current.isLoading).toEqual(false))
     expect(result.current.value).toEqual('got-me')
@@ -40,7 +40,7 @@ describe(useParameterizedAsync.name, () => {
       )
     )
 
-    result.current.fire()
+    result.current.run()
 
     await waitFor(() => expect(result.current.isLoading).toEqual(false))
     expect(result.current.error).toBeInstanceOf(UseAsyncError)
@@ -48,12 +48,12 @@ describe(useParameterizedAsync.name, () => {
     expect(result.current.value).toEqual(undefined)
   })
 
-  it('should pass parameters from fire', async () => {
+  it('should pass parameters from "run"', async () => {
     const { result } = renderHook(() =>
       useParameterizedAsync((param: number) => async () => param + 1, [])
     )
 
-    result.current.fire(2)
+    result.current.run(2)
 
     await waitFor(() => expect(result.current.value).toEqual(3))
   })
@@ -73,7 +73,7 @@ describe(useParameterizedAsync.name, () => {
       )
     )
 
-    await act(() => result.current.fire())
+    await act(() => result.current.run())
 
     result.current.abort()
 
@@ -93,7 +93,7 @@ describe(useParameterizedAsync.name, () => {
       )
     )
 
-    await act(() => result.current.fire())
+    await act(() => result.current.run())
 
     await waitFor(() => expect(result.current.isLoading).toEqual(false))
 
@@ -103,14 +103,14 @@ describe(useParameterizedAsync.name, () => {
 })
 
 describe(useImmediateAsync.name, function () {
-  it('should call fire upon mount', async function () {
+  it('should call run the action upon mount', async function () {
     const asyncOperationMock = vi.fn()
     renderHook(() => useImmediateAsync(() => asyncOperationMock, []))
 
     expect(asyncOperationMock).toBeCalled()
   })
 
-  it('should abort and fire again on dependencies change', async function () {
+  it('should abort and run the action again on dependencies change', async function () {
     vi.useFakeTimers()
     const { earlyCallMock, lateCallMock, operationMock, rejectSpy } =
       getAbortableSpy()
