@@ -42,7 +42,7 @@ export class UseAsyncError extends Error {
 
 type AsyncOpDefinition = (...params: any[]) => (opts: Options) => any
 
-export const useParameterizedAsync = <Fn extends AsyncOpDefinition>(
+export const useAsync = <Fn extends AsyncOpDefinition>(
   fetch: Fn,
   deps: unknown[]
 ): UseAsyncResult<Fn> => {
@@ -88,7 +88,7 @@ export const useImmediateAsync = <T>(
   fn: () => (opts: Options) => PromiseOrImmediate<T>,
   deps: unknown[]
 ) => {
-  const result = useParameterizedAsync(fn, deps)
+  const result = useAsync(fn, deps)
 
   const { run, abort } = result
   useEffect(() => {

@@ -1,16 +1,10 @@
 import { describe, expect, it, vi } from 'vitest'
-import {
-  useParameterizedAsync,
-  useImmediateAsync,
-  UseAsyncError,
-} from './index'
+import { useAsync, useImmediateAsync, UseAsyncError } from './index'
 import { act, renderHook, waitFor } from '@testing-library/react'
 
-describe(useParameterizedAsync.name, () => {
+describe(useAsync.name, () => {
   it('should render in a loading state { isLoading: true, value: undefined, error: undefined }', () => {
-    const { result } = renderHook(() =>
-      useParameterizedAsync(() => async () => {}, [])
-    )
+    const { result } = renderHook(() => useAsync(() => async () => {}, []))
 
     expect(result.current.isLoading).toEqual(true)
     expect(result.current.value).toBeUndefined()
@@ -19,7 +13,7 @@ describe(useParameterizedAsync.name, () => {
 
   it('should transition to a settled state after promise resolve', async () => {
     const { result } = renderHook(() =>
-      useParameterizedAsync(() => async () => 'got-me', [])
+      useAsync(() => async () => 'got-me', [])
     )
 
     result.current.run()
@@ -32,7 +26,7 @@ describe(useParameterizedAsync.name, () => {
   it('should transition to a error state after promise rejection', async () => {
     const errorMock = new Error('got-me')
     const { result } = renderHook(() =>
-      useParameterizedAsync(
+      useAsync(
         () => async () => {
           throw errorMock
         },
@@ -50,7 +44,7 @@ describe(useParameterizedAsync.name, () => {
 
   it('should pass parameters from "run"', async () => {
     const { result } = renderHook(() =>
-      useParameterizedAsync((param: number) => async () => param + 1, [])
+      useAsync((param: number) => async () => param + 1, [])
     )
 
     result.current.run(2)
@@ -61,7 +55,7 @@ describe(useParameterizedAsync.name, () => {
   it('should signal on abort', async function () {
     const abortError = new Error('aborted')
     const { result } = renderHook(() =>
-      useParameterizedAsync(
+      useAsync(
         () =>
           ({ signal }) =>
             new Promise((resolve, reject) => {
@@ -83,7 +77,7 @@ describe(useParameterizedAsync.name, () => {
   it('should not signal abort after resolve', async function () {
     const abortSpy = vi.fn()
     const { result } = renderHook(() =>
-      useParameterizedAsync(
+      useAsync(
         () =>
           async ({ signal }) => {
             signal.addEventListener('abort', abortSpy)
