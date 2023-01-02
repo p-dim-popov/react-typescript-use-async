@@ -1,9 +1,7 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import type {
   AsyncOperation,
-  AsyncOptions,
   AsyncState,
-  PromiseOrImmediate,
   UnwrapAsyncResult,
   UseAsyncResult,
 } from '../types'
@@ -11,7 +9,7 @@ import { AsyncError } from '../AsyncError'
 
 export const useAsync = <Fn extends AsyncOperation>(
   fetch: Fn,
-  deps: unknown[]
+  deps?: unknown[]
 ): UseAsyncResult<Fn> => {
   const [state, setState] = useState<AsyncState<UnwrapAsyncResult<Fn>>>({
     isLoading: true,
@@ -42,7 +40,7 @@ export const useAsync = <Fn extends AsyncOperation>(
       }
     }
     execute()
-  }, deps)
+  }, deps ?? [fetch])
 
   return {
     ...state,

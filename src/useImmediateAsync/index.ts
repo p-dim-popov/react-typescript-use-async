@@ -4,7 +4,7 @@ import { useAsync } from '../useAsync'
 
 export const useImmediateAsync = <T>(
   fn: () => (opts: AsyncOptions) => PromiseOrImmediate<T>,
-  deps: unknown[]
+  deps?: unknown[]
 ) => {
   const result = useAsync(fn, deps)
 

@@ -95,4 +95,32 @@ describe(useAsync.name, () => {
     await act(() => result.current.abort())
     expect(abortSpy).not.toBeCalled()
   })
+
+  describe('no dependencies', () => {
+    it('should change "run" reference if async operation changes', function () {
+      const { result, rerender } = renderHook(
+        (fn: () => () => void) => useAsync(fn),
+        {
+          initialProps: () => () => {},
+        }
+      )
+
+      const run = result.current.run
+
+      rerender(() => () => {})
+
+      expect(run).not.toEqual(result.current.run)
+    })
+
+    it('should not change "run" reference if async operation does not change', function () {
+      const action = () => () => {}
+      const { result, rerender } = renderHook(() => useAsync(action))
+
+      const run = result.current.run
+
+      rerender()
+
+      expect(run).toEqual(result.current.run)
+    })
+  })
 })
