@@ -1,31 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-
-export type UseAsyncResult<Fn extends AsyncOpDefinition> = AsyncState<
-  UnwrapValue<Fn>
-> & {
-  run: (...params: Parameters<Fn>) => void
-  abort: () => void
-}
-
-export type AsyncState<T> = LoadingState<T> | SuccessState<T> | ErrorState
-
-type SuccessState<T> = {
-  isLoading: false
-  value: T
-  error: undefined
-}
-
-type ErrorState = {
-  isLoading: false
-  value: undefined
-  error: UseAsyncError
-}
-
-type LoadingState<T> = {
-  isLoading: true
-  value: T | undefined
-  error: UseAsyncError | undefined
-}
+import type {
+  AsyncOpDefinition,
+  AsyncState,
+  Options,
+  PromiseOrImmediate,
+  UnwrapValue,
+  UseAsyncResult,
+} from '../types'
 
 export class UseAsyncError extends Error {
   constructor(public inner: unknown) {
@@ -39,8 +20,6 @@ export class UseAsyncError extends Error {
     )
   }
 }
-
-type AsyncOpDefinition = (...params: any[]) => (opts: Options) => any
 
 export const useAsync = <Fn extends AsyncOpDefinition>(
   fetch: Fn,
@@ -99,10 +78,3 @@ export const useImmediateAsync = <T>(
 
   return result
 }
-
-type PromiseOrImmediate<T> = Promise<T> | T
-
-type Options = { signal: AbortSignal }
-
-type UnwrapValue<Fn extends (...args: any[]) => (...args: any[]) => any> =
-  Awaited<ReturnType<ReturnType<Fn>>>
