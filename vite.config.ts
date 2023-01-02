@@ -1,5 +1,6 @@
 /// <reference types="vitest" />
 
+import { resolve } from 'path'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import dts from 'vite-plugin-dts'
@@ -14,10 +15,9 @@ export default defineConfig({
       external: ['react'],
     },
     lib: {
-      entry: {
-        'react-typescript-use-async': './src/main.ts',
-        demo: './index.html',
-      },
+      name: 'react-typescript-use-async',
+      fileName: 'react-typescript-use-async',
+      entry: resolve(__dirname, 'src/main.ts'),
     },
   },
   plugins: [react(), dts()],
