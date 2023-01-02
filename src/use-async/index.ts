@@ -33,8 +33,8 @@ export class UseAsyncError extends Error {
       typeof inner === 'object' &&
         inner !== null &&
         'message' in inner &&
-        typeof inner.message === 'string'
-        ? inner.message
+        typeof (inner as Error).message === 'string'
+        ? (inner as Error).message
         : undefined
     )
   }
