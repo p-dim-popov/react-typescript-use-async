@@ -1,9 +1,9 @@
-import type { AsyncOptions, PromiseOrImmediate } from '../types'
+import type { AsyncOptions } from '../types'
 import { useEffect } from 'react'
 import { useAsync } from '../useAsync'
 
 export const useImmediateAsync = <T>(
-  fn: () => (opts: AsyncOptions) => PromiseOrImmediate<T>,
+  fn: () => (opts: AsyncOptions<T>) => T,
   deps?: unknown[]
 ) => {
   const result = useAsync(fn, deps)

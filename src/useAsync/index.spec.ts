@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { useAsync } from './index'
 import { act, renderHook, waitFor } from '@testing-library/react'
 import { AsyncError } from '../AsyncError'
+import type { AsyncOptions } from '../types'
 
 describe(useAsync.name, () => {
   it('should render in a loading state { isLoading: true, value: undefined, error: undefined }', () => {
@@ -122,5 +123,23 @@ describe(useAsync.name, () => {
 
       expect(run).toEqual(result.current.run)
     })
+  })
+
+  it('should pass previous value to the options', async function () {
+    const { result } = renderHook(() =>
+      useAsync(
+        <T extends string | number>(param: T) =>
+          (opts: AsyncOptions<T>) => {
+            const result = (+param || 0) + +(opts.prevValue || 0)
+            return typeof param === 'string' ? `${result}` : result
+          },
+        []
+      )
+    )
+
+    await act(() => result.current.run(1))
+    await act(() => result.current.run(2))
+
+    expect(result.current.value).toEqual(3)
   })
 })

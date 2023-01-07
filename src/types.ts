@@ -1,24 +1,45 @@
 import type { AsyncError } from './AsyncError'
 
-export type UseAsyncResult<Fn extends AsyncOperation> = AsyncState<
-  UnwrapAsyncResult<Fn>
-> & {
-  run: (...params: Parameters<Fn>) => void
+export type UseAsyncResult<
+  Args extends ReadonlyArray<unknown>,
+  Return
+> = AsyncState<Return> & {
+  run: (...params: Args) => void
   abort: () => void
 }
 
-export type AsyncState<T> = LoadingState<T> | SuccessState<T> | ErrorState
+export type AsyncState<T> =
+  | InitialLoadingState
+  | LoadingState<T>
+  | SuccessState<T>
+  | ErrorState
 
-type SuccessState<T> = {
+export type InternalAsyncState<T> =
+  | InitialLoadingState
+  | InternalLoadingState<T>
+  | SuccessState<T>
+  | ErrorState
+
+type InternalLoadingState<T> = LoadingState<T> & {
+  abortController: AbortController
+}
+
+export type SuccessState<T> = {
   isLoading: false
   value: T
   error: undefined
 }
 
-type ErrorState = {
+export type ErrorState = {
   isLoading: false
   value: undefined
   error: AsyncError
+}
+
+export type InitialLoadingState = {
+  isLoading: true
+  value: undefined
+  error: undefined
 }
 
 type LoadingState<T> = {
@@ -27,12 +48,7 @@ type LoadingState<T> = {
   error: AsyncError | undefined
 }
 
-export type AsyncOperation = (...params: any[]) => (opts: AsyncOptions) => any
-
-export type PromiseOrImmediate<T> = Promise<T> | T
-
-export type AsyncOptions = { signal: AbortSignal }
-
-export type UnwrapAsyncResult<
-  Fn extends (...args: any[]) => (...args: any[]) => any
-> = Awaited<ReturnType<ReturnType<Fn>>>
+export type AsyncOptions<T> = {
+  signal: AbortSignal
+  prevValue: T | undefined
+}
